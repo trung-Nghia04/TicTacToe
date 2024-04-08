@@ -15,7 +15,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.swing.JPanel;
 
-public class BoardGame extends JPanel {
+public class BoardGameAIMode extends JPanel {
 	private static final int N = 3;
 	private static final int M = 3;
 
@@ -31,40 +31,36 @@ public class BoardGame extends JPanel {
 	private Image imgO;
 	private Cell[][] matrix = new Cell[N][M];
 	private String currentPlayer = Cell.EMPTY_VALUE;
+	private boolean isHumanTurn = true;// Biến để xác định lượt của người chơi hoặc máy
 
-	public BoardGame(String player) {
+	public BoardGameAIMode(String player) {
 		this();
 		this.currentPlayer = player;
 	}
 
-	public BoardGame() {
+	public BoardGameAIMode() {
 		this.initMatrix();
 
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				super.mousePressed(e);
-				int x = e.getX();
-				int y = e.getY();
-
-				if (currentPlayer.equals(Cell.EMPTY_VALUE)) {
+				if (!isHumanTurn || currentPlayer.equals(Cell.EMPTY_VALUE)) {
 					return;
 				}
+				int x = e.getX();
+				int y = e.getY();
 
 				// phát ra âm thanh
 				soundClick();
 
-				// Tính toán xem x, y rơi vào ô nào trong board, sau đó vẽ hình x, o tùy ý
+				// Xử lý đánh của người chơi
 				for (int i = 0; i < N; i++) {
 					for (int j = 0; j < M; j++) {
 						Cell cell = matrix[i][j];
-
 						int cXStart = cell.getX();
 						int cYStart = cell.getY();
-
 						int cXEnd = cXStart + cell.getW();
 						int cYEnd = cYStart + cell.getH();
-
 						if (x >= cXStart && x <= cXEnd && y >= cYStart && y <= cYEnd) {
 							if (cell.getValue().equals(Cell.EMPTY_VALUE)) {
 								cell.setValue(currentPlayer);
@@ -76,6 +72,8 @@ public class BoardGame extends JPanel {
 
 								if (result == ST_NORMAL) {
 									currentPlayer = currentPlayer.equals(Cell.O_VALUE) ? Cell.X_VALUE : Cell.O_VALUE;
+									isHumanTurn = false; // Sau nước đi của người chơi, đến lượt của máy
+									computerMove(); // Máy thực hiện nước đi của mình
 								}
 							}
 						}
@@ -90,6 +88,85 @@ public class BoardGame extends JPanel {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	public void computerMove() {
+		// Tìm nước đi tối ưu cho máy bằng thuật toán MiniMax
+		Move bestMove = minimax(matrix, currentPlayer);
+
+		// Đánh vào ô tối ưu
+		matrix[bestMove.row][bestMove.col].setValue(currentPlayer);
+		repaint();
+		int result = checkWin(currentPlayer);
+		if (endGameListener != null) {
+			endGameListener.end(currentPlayer, result);
+		}
+
+		if (result == ST_NORMAL) {
+			currentPlayer = currentPlayer.equals(Cell.O_VALUE) ? Cell.X_VALUE : Cell.O_VALUE;
+			isHumanTurn = true; // Sau nước đi của máy, đến lượt của người chơi
+		}
+	}
+
+	private Move minimax(Cell[][] board, String player) {
+		int bestScore = Integer.MIN_VALUE;
+		Move bestMove = new Move(-1, -1);
+
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < M; j++) {
+				if (board[i][j].getValue().equals(Cell.EMPTY_VALUE)) {
+					board[i][j].setValue(player);
+					int score = minimaxHelper(board, 0, false, player);
+					board[i][j].setValue(Cell.EMPTY_VALUE);
+
+					if (score > bestScore) {
+						bestScore = score;
+						bestMove.row = i;
+						bestMove.col = j;
+					}
+				}
+			}
+		}
+
+		return bestMove;
+	}
+
+	private int minimaxHelper(Cell[][] board, int depth, boolean isMaximizingPlayer, String player) {
+		int result = checkWin(player);
+		if (result == ST_WIN) {
+			return 10;
+		} else if (result == ST_DRAW) {
+			return 0;
+		}
+
+		if (isMaximizingPlayer) {
+			int bestScore = Integer.MIN_VALUE;
+			for (int i = 0; i < N; i++) {
+				for (int j = 0; j < M; j++) {
+					if (board[i][j].getValue().equals(Cell.EMPTY_VALUE)) {
+						board[i][j].setValue(player);
+						int score = minimaxHelper(board, depth + 1, false, player);
+						board[i][j].setValue(Cell.EMPTY_VALUE);
+						bestScore = Math.max(score, bestScore);
+					}
+				}
+			}
+			return bestScore;
+		} else {
+			int bestScore = Integer.MAX_VALUE;
+			for (int i = 0; i < N; i++) {
+				for (int j = 0; j < M; j++) {
+					if (board[i][j].getValue().equals(Cell.EMPTY_VALUE)) {
+						String opponent = player.equals(Cell.X_VALUE) ? Cell.O_VALUE : Cell.X_VALUE;
+						board[i][j].setValue(opponent);
+						int score = minimaxHelper(board, depth + 1, true, player);
+						board[i][j].setValue(Cell.EMPTY_VALUE);
+						bestScore = Math.min(score, bestScore);
+					}
+				}
+			}
+			return bestScore;
 		}
 	}
 
@@ -218,8 +295,7 @@ public class BoardGame extends JPanel {
 		int h = getHeight() / 3;
 
 		Graphics2D graphic2d = (Graphics2D) g;
-		graphic2d.setColor(new Color(221, 196, 136));
-		
+		graphic2d.setColor(new Color(33, 70, 94));
 		graphic2d.fillRect(0, 0, getWidth(), getHeight());
 
 		// Tăng độ dày cho viền
@@ -239,8 +315,7 @@ public class BoardGame extends JPanel {
 				cell.setH(h);
 
 				// Vẽ viền
-				
-				graphic2d.setColor(new Color(225, 225, 225));
+				graphic2d.setColor(new Color(100, 139, 163));
 				graphic2d.drawRect(x, y, w, h);
 
 				if (cell.getValue().equals(Cell.X_VALUE)) {
@@ -256,4 +331,5 @@ public class BoardGame extends JPanel {
 		// Khôi phục lại độ dày ban đầu của viền
 		graphic2d.setStroke(oldStroke);
 	}
+
 }
