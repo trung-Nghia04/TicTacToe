@@ -8,9 +8,14 @@ import view.GameBoardView;
 import view.GameBoardViewInterface;
 
 public class Test {
+
+	private static GameBoardViewInterface theView;
+	private static GameModelInterface theModel;
+	private static Controller theController;
+
 	public static void main(String args[]) {
-		GameBoardViewInterface theView = new GameBoardView();
-		GameModelInterface theModel = new GameModel(3);
-		Controller theController = new GameController(theModel, theView);
+		theView = new GameBoardView();
+		theModel = new GameModel(3);
+		theController = new GameController(theModel, theView);
 	}
 }

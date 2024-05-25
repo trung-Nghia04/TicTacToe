@@ -64,5 +64,15 @@ public class GameModel implements GameModelInterface {
 		board[row][col] = '\0'; // Đặt ô đã đánh lại thành trống
 		turn = (turn == 'X') ? 'O' : 'X'; // Đổi lại lượt chơi
 	}
+	public boolean isBoardFull() {
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                if (board[row][col] == '\0') { // Nếu có ô trống
+                    return false; // Bàn cờ chưa đầy
+                }
+            }
+        }
+        return true; // Tất cả các ô đã được đánh dấu, bàn cờ đã đầy
+    }
 
 }

@@ -70,8 +70,8 @@ public class GameLogic {
 		return true;
 	}
 
-	public boolean isValidMove(int row, int col) {
-		return row >= 0 && row < size && col >= 0 && col < size && board[row][col] == '\0';
-	}
+//	public boolean isValidMove(int row, int col) {
+//		return row >= 0 && row < size && col >= 0 && col < size && board[row][col] == '\0';
+//	}
 
 }

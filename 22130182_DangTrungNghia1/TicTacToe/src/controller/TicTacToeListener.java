@@ -32,11 +32,17 @@ public class TicTacToeListener extends Controller implements ActionListener {
 	}
 
 	private void aiTurn() {
-		if (theModel.getTurn() == aiPlayerChar) {
+		if (theModel.getTurn() == aiPlayerChar && !theModel.isBoardFull()) { // Kiểm tra lượt và bàn cờ chưa đầy
 			int[] move = aiPlayer.makeMove();
-			theModel.doMove(move[0], move[1]);
-			theView.setButtonText(aiPlayerChar, move[0], move[1]);
-			checkGameOver();
+			int row = move[0];
+			int col = move[1];
+
+			if (theModel.doMove(row, col)) {
+				theView.setButtonText(aiPlayerChar, row, col);
+				checkGameOver();
+			} else {
+				aiTurn(); // Gọi đệ quy nếu nước đi không hợp lệ (thử lại)
+			}
 		}
 	}
 

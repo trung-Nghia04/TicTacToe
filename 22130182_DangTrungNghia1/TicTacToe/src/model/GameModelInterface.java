@@ -14,4 +14,6 @@ public interface GameModelInterface {
 	boolean isEmptyCell(int row, int col);
 
 	public void undoMove(int row, int col);
+
+	public boolean isBoardFull();
 }

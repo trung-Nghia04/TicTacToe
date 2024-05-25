@@ -3,7 +3,6 @@ package controller;
 import model.AI;
 import model.GameModelInterface;
 import view.GameBoardViewInterface;
-import view.GameBoardViewInterface;
 
 public abstract class Controller {
 	protected GameModelInterface theModel;
